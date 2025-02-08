@@ -1,21 +1,18 @@
 // app/components/ui/CostDisplay.tsx
-'use client';
-import { useStore } from '@/store/useStore';
+// components/ui/CostDisplay.tsx
+import React from 'react';
 
-const CostDisplay: React.FC = () => {
-  const { cost, error } = useStore(); // Obtiene el costo y el error
+// Define la interfaz para las props
+interface CostDisplayProps {
+  cost: number;
+}
 
+// Usa la interfaz como el tipo de las props del componente
+const CostDisplay: React.FC<CostDisplayProps> = ({ cost }) => {
   return (
-    <div>
-      <h2 className="text-lg font-semibold mb-2">Costo Estimado:</h2>
-      {error && <p className="text-red-500">{error}</p>} {/* Muestra el error */}
-      {cost !== null ? (
-        <p className="text-2xl font-bold text-green-600">
-          {cost.toFixed(2)} MXN
-        </p>
-      ) : (
-        <p>Selecciona un modelo y opciones para calcular el costo.</p>
-      )}
+    <div className="mt-4 p-4 bg-gray-50 rounded-lg shadow-sm">
+      <h3 className="text-lg font-semibold">Cotización Estimada:</h3>
+      <p><strong>Precio:</strong> ${cost.toFixed(2)} MXN</p>
     </div>
   );
 };

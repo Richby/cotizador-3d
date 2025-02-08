@@ -11,10 +11,17 @@ datasource db {
 }
 
 model Order {
-  id          String  @id @default(uuid())
+  id          String   @id @default(uuid())
   userEmail   String
-  file        String  // URL del archivo subido
+  file        String // URL del archivo subido
   material    String
   price       Float
   createdAt   DateTime @default(now())
+}
+
+//AGREGAR
+model Filament {
+  id              String @id @default(uuid())
+  name            String @unique
+  costPerCubicMM  Float // Costo por milímetro cúbico
 }

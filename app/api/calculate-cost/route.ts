@@ -1,7 +1,7 @@
 // app/api/calculate-cost/route.ts
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { calculateCost } from '@/lib/calculations';
+import { estimatePrintCost } from '@/lib/calculations';
 import prisma from '@/lib/prisma';
 
 // Define el esquema de validación con Zod
@@ -34,7 +34,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Filament not found' }, { status: 404 });
     }
 
-    const cost = await calculateCost(dimensions, filament, infill, layerHeight); // AWAIT calculateCost
+    const volume = dimensions.x * dimensions.y * dimensions.z;
+    const cost = estimatePrintCost(volume, filament.costPerCubicCm, layerHeight, infill); // AWAIT calculateCost
 
     return NextResponse.json({ cost });
 
