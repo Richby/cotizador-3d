@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:latest  # Usa la última imagen de PostgreSQL
+    restart: always
+    environment:
+      POSTGRES_USER: adminsist 
+      POSTGRES_PASSWORD: masterkey 
+      POSTGRES_DB: cotizador3D 
+    ports:
+      - "5432:5432"  # Expone el puerto 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

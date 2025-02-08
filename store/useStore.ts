@@ -1,4 +1,4 @@
-// store/useStore.ts
+
 import create from 'zustand';
 
 interface Dimensions {
@@ -15,14 +15,14 @@ interface AppState {
     layerHeight: number;
     cost: number | null;
     modelLoaded: boolean;
-    error: string | null;
+    error: string | null; // Agrega estado para errores
     setLoading: (isLoading: boolean) => void;
     setDimensions: (dimensions: Dimensions) => void;
     setSelectedFilamentId: (filamentId: number | null) => void;
     setInfill: (infill: number) => void;
     setLayerHeight: (layerHeight: number) => void;
     setCost: (cost: number | null) => void;
-    setError: (error: string | null) => void;
+    setError: (error: string | null) => void; // Función para establecer errores
     setModelLoaded:(isLoaded: boolean) => void;
 }
 
@@ -30,17 +30,17 @@ export const useStore = create<AppState>((set) => ({
     isLoading: false,
     dimensions: { x: 0, y: 0, z: 0 },
     selectedFilamentId: null,
-    infill: 0.2, // Valor por defecto
-    layerHeight: 0.2, // Valor por defecto
+    infill: 0.2,
+    layerHeight: 0.2,
     cost: null,
     modelLoaded: false,
-    error: null,
+    error: null, // Estado inicial de error
     setLoading: (isLoading) => set({ isLoading }),
     setDimensions: (dimensions) => set({ dimensions }),
     setSelectedFilamentId: (selectedFilamentId) => set({ selectedFilamentId }),
     setInfill: (infill) => set({ infill }),
     setLayerHeight: (layerHeight) => set({ layerHeight }),
     setCost: (cost) => set({ cost }),
-    setError: (error) => set({ error }),
+    setError: (error) => set({ error }), // Función para establecer errores
     setModelLoaded: (isLoaded) => set({modelLoaded: isLoaded}),
 }));

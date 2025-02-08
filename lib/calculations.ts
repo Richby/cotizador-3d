@@ -1,8 +1,6 @@
 // lib/calculations.ts
-
-interface Filament {
-  costPerCubicCm: number;
-}
+import { Filament } from '@prisma/client';
+import prisma from '@/lib/prisma'; // Import the *instance* from lib/prisma.ts
 
 interface Dimensions {
   x: number;
@@ -10,7 +8,7 @@ interface Dimensions {
   z: number;
 }
 
-export function calculateCost(
+export async function calculateCost(
   dimensions: Dimensions,
   filament: Filament,
   infill: number,

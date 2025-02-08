@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { calculateCost } from '@/lib/calculations';
-import prisma from '../../../lib/prisma';
+import prisma from '@/lib/prisma';
 
 // Define el esquema de validación con Zod
 const costCalculationSchema = z.object({
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Filament not found' }, { status: 404 });
     }
 
-    const cost = calculateCost(dimensions, filament, infill, layerHeight);
+    const cost = await calculateCost(dimensions, filament, infill, layerHeight); // calculateCost ahora es async
 
     return NextResponse.json({ cost });
 

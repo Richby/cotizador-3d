@@ -1,4 +1,4 @@
-// app/(components)/ui/FilamentSelector.tsx
+// app/components/ui/FilamentSelector.tsx
 'use client';
 import { useStore } from '@/store/useStore';
 interface Filament {
