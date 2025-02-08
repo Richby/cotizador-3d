@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Filament not found' }, { status: 404 });
     }
 
-    const cost = await calculateCost(dimensions, filament, infill, layerHeight); // calculateCost ahora es async
+    const cost = await calculateCost(dimensions, filament, infill, layerHeight); // AWAIT calculateCost
 
     return NextResponse.json({ cost });
 

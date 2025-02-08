@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: adminsist  # <-- Usuario
+      POSTGRES_PASSWORD: masterkey  # <-- Contraseña
+      POSTGRES_DB: cotizador3D
+    ports:
+      - "5432:5432"  #  Para acceso externo (opcional, pero útil)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U adminsist -d cotizador3D"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nextjs:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: DATABASE_URL="postgresql://postgres:adminsist1478@localhost:5432/cotizador3d_db?schema=public" # URL correcta
+
+volumes:
+  postgres_data:

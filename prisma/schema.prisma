@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,11 +10,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Filament {
-  id          Int     @id @default(autoincrement())
-  name        String  @unique
-  costPerCubicCm Float
-  density     Float
-
-  @@map("filaments")
+model Order {
+  id          String  @id @default(uuid())
+  userEmail   String
+  file        String  // URL del archivo subido
+  material    String
+  price       Float
+  createdAt   DateTime @default(now())
 }

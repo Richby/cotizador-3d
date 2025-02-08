@@ -1,4 +1,6 @@
 // app/page.tsx
+require('dotenv').config({ path: '.env.local' });
+
 import ModelViewer from './components/ModelViewer'; // Ensure this path is correct and the file exists
 import FilamentSelector from './components/ui/FilamentSelector';
 import CostDisplay from './components/ui/CostDisplay';

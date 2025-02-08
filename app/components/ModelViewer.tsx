@@ -1,14 +1,14 @@
 // app/components/ModelViewer.tsx
-'use client'; // <--  ¡CRUCIAL!  Debe ser un Client Component
+'use client';
 import React, { useState, useRef, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { STLLoader } from 'three-stdlib';
-import { Box3, Vector3, BufferGeometry, Mesh, Group } from 'three';
 import * as THREE from 'three';
+import { Box3, Vector3, BufferGeometry, Mesh } from 'three';
 import { useStore } from '@/store/useStore';
 import Dropzone from './ui/Dropzone';
-import axios from 'axios'; // Importa axios
+import axios from 'axios';
 
 const ModelViewer: React.FC = () => {
   const { setDimensions, setModelLoaded, setCost, setError } = useStore();
@@ -20,7 +20,7 @@ const ModelViewer: React.FC = () => {
     setLoading(true);
     setModel(null);
     setDimensions({ x: 0, y: 0, z: 0 });
-    setError(null); // Limpia errores anteriores
+    setError(null);
     setCost(null);
 
     if (!file) {
@@ -31,7 +31,7 @@ const ModelViewer: React.FC = () => {
     if (file.name.toLowerCase().endsWith('.stl')) {
       const reader = new FileReader();
 
-      reader.onload = async (event: ProgressEvent<FileReader>) => { // <-- async aquí
+      reader.onload = async (event: ProgressEvent<FileReader>) => {
         try {
           if (event.target && event.target.result) {
             const loader = new STLLoader();
@@ -44,29 +44,28 @@ const ModelViewer: React.FC = () => {
               boundingBox.getSize(size);
               setDimensions({ x: size.x, y: size.y, z: size.z });
 
-                // Obtiene el estado actual de Zustand *dentro* del callback asíncrono
                 const { selectedFilamentId, infill, layerHeight } = useStore.getState();
 
-              // Envía la petición a la API *solo* si tenemos un filamento seleccionado
-                if (selectedFilamentId) {
-                  const response = await axios.post<{ cost: number }>('/api/calculate-cost', {
+              if (selectedFilamentId) {
+                  const response = await axios.post('/api/calculate-cost', {
                     dimensions: { x: size.x, y: size.y, z: size.z },
                     filamentId: selectedFilamentId,
                     infill,
                     layerHeight,
                   });
-                    setCost(response.data.cost);
-                }
+                  const cost = (response.data as { cost: number }).cost;
+                  setCost(cost);
+              }
             }
 
-            const modelGroup = new Group();
+            const modelGroup = new THREE.Group();
             modelGroup.add(new Mesh(geometry));
             setModel(modelGroup);
             setModelLoaded(true);
           }
         } catch (error:any) {
           console.error("Error en onFileAccepted:", error);
-            setError(error.message || 'Error al procesar el archivo.'); // Guarda el error en el store
+            setError(error.message || 'Error al procesar el archivo.');
         } finally {
           setLoading(false);
         }
@@ -75,7 +74,7 @@ const ModelViewer: React.FC = () => {
       reader.onerror = () => {
         setLoading(false);
         setModelLoaded(false);
-        setError('Error al leer el archivo.'); // Guarda el error en el store
+        setError('Error al leer el archivo.');
       };
 
       reader.readAsArrayBuffer(file);
@@ -83,19 +82,18 @@ const ModelViewer: React.FC = () => {
       // TODO: Lógica para procesar G-Code (pendiente de implementación)
       setModelLoaded(true);
     } else {
-      setError('Formato de archivo no soportado. Sube un archivo .stl o .gcode'); // Guarda el error en el store
+      setError('Formato de archivo no soportado. Sube un archivo .stl o .gcode');
       setLoading(false);
       setModelLoaded(false);
     }
-  }, [setDimensions, setModelLoaded, setCost, setError]); // Dependencias correctas
-
+  }, [setDimensions, setModelLoaded, setCost, setError]);
 
   return (
     <div style={{ width: '100%', height: '500px' }}>
       <Dropzone onFileAccepted={onFileAccepted} />
       {loading && <p>Cargando modelo...</p>}
       {model && (
-        <Canvas camera={{ position: [10, 10, 10] }}>
+        <Canvas camera={{ position: [10, 10, 10], fov: 60 }}>
           <ambientLight intensity={0.5} />
           <directionalLight position={[0, 10, 0]} intensity={0.5} />
           <primitive object={model} />
