@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const { dimensions, filamentId, infill, layerHeight } = validatedData;
 
     const filament = await prisma.filament.findUnique({
-      where: { id: filamentId },
+      where: { id: filamentId.toString() },
     });
 
     if (!filament) {
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     const volume = dimensions.x * dimensions.y * dimensions.z;
-    const cost = estimatePrintCost(volume, filament.costPerCubicCm, layerHeight, infill); // AWAIT calculateCost
+    const cost = estimatePrintCost(volume, filament.costPerCubicMM, layerHeight, infill); // AWAIT calculateCost
 
     return NextResponse.json({ cost });
 

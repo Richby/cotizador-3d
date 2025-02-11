@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import * as THREE from "three";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
-import ModelViewer from ".././components/ModelViewer";
-import { estimatePrintCost, calculateVolume } from "../../lib/calculations"; // Asegúrate de que las rutas sean correctas
+import ModelViewer from ".././components/ModelViewer"; //  ruta
+import { calculateVolume, estimatePrintCost } from '../../lib/calculations'; // ruta
 import { useDropzone } from 'react-dropzone';
 
+
+// Interfaces
 interface Dimensions {
   width: number;
   height: number;
@@ -30,10 +32,11 @@ export default function UploadPage() {
   const [layerMultiplier, setLayerMultiplier] = useState<number>(1.0);
   const [infillMultiplier, setInfillMultiplier] = useState<number>(1.0);
   const [scale, setScale] = useState<number>(1); // Escala como fracción (1 = 100%)
-    const [fileSizeMultiplier, setFileSizeMultiplier] = useState<number>(1.0);
+  const [fileSizeMultiplier, setFileSizeMultiplier] = useState<number>(1.0);
 
 
-  // Cargar filamentos desde la API (asumiendo que tienes /api/filaments)
+
+  // Cargar filamentos desde la API
   useEffect(() => {
     const fetchFilaments = async () => {
       try {
@@ -54,72 +57,63 @@ export default function UploadPage() {
     fetchFilaments();
   }, []);
 
-  // --- Funciones de Manejo de Eventos ---
-    const handleMaterialChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedFilamentId(event.target.value);
-    };
+  const handleMaterialChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedFilamentId(event.target.value);
+  };
 
-    const handleLayerHeightChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setLayerMultiplier(parseFloat(event.target.value));
-    };
+  const handleLayerHeightChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setLayerMultiplier(parseFloat(event.target.value));
+  };
 
-    const handleInfillDensityChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setInfillMultiplier(parseFloat(event.target.value));
-    };
-    const handleScaleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newScale = parseFloat(event.target.value);
-        setScale(newScale / 100); // Convertir porcentaje a fracción
-    };
+  const handleInfillDensityChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setInfillMultiplier(parseFloat(event.target.value));
+  };
 
-    //Actualizar dimensiones.
-    useEffect(() => {
-      if (dimensions) {
-          setDimensions({
-              width: dimensions.width * scale,
-              height: dimensions.height * scale,
-              depth: dimensions.depth * scale
-          });
+  // Actualizar la escala
+  const handleScaleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newScale = parseFloat(event.target.value);
+    setScale(newScale / 100); // Convertir porcentaje a fracción (e.g., 100 -> 1)
+  };
+
+  // useEffect para recalcular la cotización.  Depende de *todo* lo que afecta el costo.
+  useEffect(() => {
+    if (dimensions && selectedFilamentId && filaments.length > 0) {
+      const filament = filaments.find((f) => f.id === selectedFilamentId);
+      if (filament) {
+        const volume = calculateVolume(dimensions);
+        const cost = estimatePrintCost(volume, filament.costPerCubicMM, layerMultiplier, infillMultiplier, fileSizeMultiplier);
+        setQuote(cost);
       }
-    },[scale]);
+    }
+  }, [dimensions, selectedFilamentId, filaments, layerMultiplier, infillMultiplier, fileSizeMultiplier, scale]);
 
+  //Permitir modificar dimensiones
+  const handleDimensionChange = (dimension: 'width' | 'height' | 'depth', value: number) => {
+    if (dimensions) {
+      setDimensions(prevDimensions => ({
+        ...prevDimensions!,
+        [dimension]: value,
+      }));
+    }
+  };
 
-    //useEffect para calcular costo
-    useEffect(() => {
-        if (dimensions && selectedFilamentId && filaments.length > 0) {
-          const filament = filaments.find((f) => f.id === selectedFilamentId);
-          if (filament) {
-            const volume = calculateVolume(dimensions);
-            const cost = estimatePrintCost(volume, filament.costPerCubicMM, layerMultiplier, infillMultiplier, fileSizeMultiplier);
-            setQuote(cost);
-          }
-        }
-      }, [dimensions, selectedFilamentId, filaments, layerMultiplier, infillMultiplier, scale, fileSizeMultiplier]);
-
-    //Para modificar las dimensiones individualmente.
-    const handleDimensionChange = (dimension: 'width' | 'height' | 'depth', value: number) => {
-        if(dimensions)
-            setDimensions(prevDimensions => ({
-                ...prevDimensions!,
-                [dimension]: value,
-        }));
-    };
 
   const handleFileChange = (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       const uploadedFile = acceptedFiles[0];
-        setFile(uploadedFile); // Guarda el archivo en el estado
-        setFileSizeMultiplier(Math.log(uploadedFile.size / 100000 + 1) + 1);
-        loadModel(uploadedFile);
+      setFile(uploadedFile); // Guarda el archivo en el estado.
+      setFileSizeMultiplier(Math.log(uploadedFile.size / 100000 + 1) + 1);
+      loadModel(uploadedFile); // Llama a loadModel *después* de setFile.
     }
   };
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop: handleFileChange,
-        accept: {
-            'model/stl': ['.stl'],
-            'model/obj': ['.obj']
-        }
-    });
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: handleFileChange,
+    accept: {
+      'model/stl': ['.stl'],
+      'model/obj': ['.obj']
+    }
+  });
 
   const loadModel = (file: File) => {
     const reader = new FileReader();
@@ -132,25 +126,26 @@ export default function UploadPage() {
       } else if (file.name.endsWith(".obj")) {
         const loader = new OBJLoader();
         const object = loader.parse(event.target.result as string);
+        // Asegurarse de que el objeto tiene hijos y que el primer hijo es un Mesh
         if (object.children.length > 0 && object.children[0] instanceof THREE.Mesh) {
           setGeometry(object.children[0].geometry);
         }
       }
     };
-    reader.readAsArrayBuffer(file);
+    reader.readAsArrayBuffer(file); // Para archivos binarios
   };
-    //Opciones para los selectores
-    const layerHeights = [
-        { name: "0.1 mm (Alta calidad)", multiplier: 1.2 },
-        { name: "0.2 mm (Calidad estándar)", multiplier: 1.0 },
-        { name: "0.3 mm (Baja calidad)", multiplier: 0.8 },
-    ];
 
-    const infillDensities = [
-        { name: "10% (Bajo)", multiplier: 0.8 },
-        { name: "25% (Medio)", multiplier: 1.0 },
-        { name: "50% (Alto)", multiplier: 1.3 },
-    ];
+  const layerHeights = [
+    { name: "0.1 mm (Alta calidad)", multiplier: 1.2 },
+    { name: "0.2 mm (Calidad estándar)", multiplier: 1.0 },
+    { name: "0.3 mm (Baja calidad)", multiplier: 0.8 },
+  ];
+
+  const infillDensities = [
+    { name: "10% (Bajo)", multiplier: 0.8 },
+    { name: "25% (Medio)", multiplier: 1.0 },
+    { name: "50% (Alto)", multiplier: 1.3 },
+  ];
 
 
   return (
@@ -252,25 +247,20 @@ export default function UploadPage() {
                 value={dimensions.depth.toFixed(2)}
                 onChange={(e) => handleDimensionChange('depth', parseFloat(e.target.value))}
               />
-            </div>
-          )}
-            {/* Control de Escalado */}
-            <div className="mt-4">
-                <label htmlFor="scale-slider" className="block text-sm font-medium text-gray-700">
-                    Escala:
-                </label>
+                {/* Control de Escalado */}
+                <label className="block text-sm font-medium text-gray-700">Escala (%):</label>
                 <input
                     type="range"
-                    id="scale-slider"
-                    min="0.1"  // Mínimo 10%
-                    max="2"  // Máximo 200%
-                    step="0.01" // Pasos de 1%
-                    value={scale}
+                    min="10"  // Mínimo 10%
+                    max="200" // Máximo 200%
+                    step="1"  // Pasos de 1%
+                    value={scale * 100} // Se muestra el valor porcentual.
                     onChange={handleScaleChange}
-                    className="mt-1 block w-full"
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" // Estilos
                 />
                 <p className="text-center">{`${(scale * 100).toFixed(0)}%`}</p>
             </div>
+          )}
 
           {/* Mostrar Cotización */}
           {quote !== null && (
@@ -278,11 +268,17 @@ export default function UploadPage() {
               <p>Costo Estimado: ${quote.toFixed(2)} MXN</p>
             </div>
           )}
+
+          {/* Botón (placeholder) */}
+          <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Agregar al Carrito
+          </button>
         </div>
 
         <div className="md:w-1/2">
           {/* Visor 3D */}
-          {geometry && <ModelViewer geometry={geometry} setDimensions={setDimensions}  scale={scale}/>}
+          {/* Pasar la escala al ModelViewer */}
+          {geometry && <ModelViewer geometry={geometry} setDimensions={setDimensions} scale={scale} />}
         </div>
       </div>
     </main>
