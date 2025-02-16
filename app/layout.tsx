@@ -2,11 +2,7 @@
 import "./globals.css";
 import Link from "next/link";
 
-interface RootLayoutProps {
-  children: React.ReactNode;
-}
-
-export default function RootLayout({ children }: RootLayoutProps) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
       <body>
@@ -14,15 +10,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <nav className="p-4 bg-white shadow-md flex justify-between items-center">
             <h1 className="text-xl font-bold text-orange-500">Cotizador 3D</h1>
             <div>
-              <Link href="/" className="mr-4 hover:text-orange-500 transition-colors">
-                Inicio
-              </Link>
-              <Link
-                href="/"
-                className="ml-4 hover:text-orange-500 transition-colors"
-              >
-                Subir Modelo
-              </Link>
+              <Link href="/">Inicio</Link>
+              <Link href="/upload">Subir Modelo</Link>
             </div>
           </nav>
           <main className="p-6">{children}</main>

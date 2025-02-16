@@ -1,8 +1,8 @@
 // app/api/calculate-cost/route.ts
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import { estimatePrintCost } from '@/lib/calculations';
-import prisma from '@/lib/prisma';
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { estimatePrintCost } from "@/lib/calculations";
+import prisma from "@/lib/prisma";
 
 // Define el esquema de validación con Zod
 const costCalculationSchema = z.object({
@@ -11,7 +11,7 @@ const costCalculationSchema = z.object({
     y: z.number().positive(),
     z: z.number().positive(),
   }),
-  filamentId: z.number().int().positive(),
+  filamentId: z.string().nonempty(),
   infill: z.number().min(0).max(1),
   layerHeight: z.number().positive(),
 });
@@ -31,20 +31,24 @@ export async function POST(request: Request) {
     });
 
     if (!filament) {
-      return NextResponse.json({ error: 'Filament not found' }, { status: 404 });
+      return NextResponse.json({ error: "Filamento no encontrado" }, { status: 404 });
     }
 
     const volume = dimensions.x * dimensions.y * dimensions.z;
-    const cost = estimatePrintCost(volume, filament.costPerCubicMM, layerHeight, infill); // AWAIT calculateCost
+    const cost = estimatePrintCost(
+      volume,
+      filament.costPerCubicMM, // Aquí se pasa el valor numérico
+      layerHeight,
+      infill
+    );
 
     return NextResponse.json({ cost });
-
   } catch (error) {
-    // Manejo de errores mejorado con Zod
     if (error instanceof z.ZodError) {
       return NextResponse.json({ errors: error.errors }, { status: 400 }); // Errores de validación
     }
+
     console.error(error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
